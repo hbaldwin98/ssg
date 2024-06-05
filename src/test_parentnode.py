@@ -19,8 +19,10 @@ class TestParentNode(unittest.TestCase):
 
     def test_to_html_with_two_children(self):
         child_node = LeafNode("strong", "this is some text", None)
-        child_node_2 = LeafNode("p", "this is some text as well", {"color": "red"})
-        node = ParentNode("p", [child_node, child_node_2], {"style": "margin: 1rem"})
+        child_node_2 = LeafNode(
+            "p", "this is some text as well", {"color": "red"})
+        node = ParentNode("p", [child_node, child_node_2], {
+                          "style": "margin: 1rem"})
 
         self.assertEqual(
             node.to_html(),
@@ -29,7 +31,8 @@ class TestParentNode(unittest.TestCase):
 
     def test_to_html_with_nested_parent(self):
         child_node = LeafNode("strong", "this is some text", None)
-        child_node_2 = LeafNode("span", "this is some text as well", {"color": "red"})
+        child_node_2 = LeafNode(
+            "span", "this is some text as well", {"color": "red"})
         nested_parent_node = ParentNode("p", [child_node_2], None)
         node = ParentNode(
             "p", [child_node, nested_parent_node], {"style": "margin: 1rem"}
