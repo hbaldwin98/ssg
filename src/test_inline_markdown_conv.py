@@ -1,4 +1,4 @@
-from markdown_conv import (
+from inline_markdown_conv import (
     extract_markdown_images,
     split_nodes_images,
     split_nodes_links,
@@ -9,7 +9,7 @@ import unittest
 from textnode import TextNode, TextType
 
 
-class ExtractLinksAndImages(unittest.TestCase):
+class InlineMarkdownTests(unittest.TestCase):
     def test_splits_nodes(self):
         test_cases = [
             (
