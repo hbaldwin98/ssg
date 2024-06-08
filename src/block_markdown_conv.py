@@ -1,6 +1,5 @@
 from enum import Enum
 from htmlnode import HTMLNode
-from textnode import TextNode, TextType
 
 
 class BlockType(Enum):
@@ -95,8 +94,7 @@ def markdown_to_html_node(markdown: str) -> HTMLNode:
                 number_hashes = len(split_block[0])
                 tag = f"h{number_hashes}"
 
-        is_list_block = block_type in [
-            BlockType.OrderedList, BlockType.UnorderedList]
+        is_list_block = block_type in [BlockType.OrderedList, BlockType.UnorderedList]
 
         lines = block.split('\n')
         for line in lines:
