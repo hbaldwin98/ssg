@@ -1,5 +1,7 @@
 from enum import Enum
-from htmlnode import HTMLNode, ParentNode, LeafNode
+from htmlnode import HTMLNode, ParentNode
+from inline_markdown_conv import markdown_to_nodes, text_node_to_html_node
+from textnode import TextNode
 
 
 class BlockType(Enum):
@@ -99,21 +101,33 @@ def markdown_to_html_node(markdown: str) -> HTMLNode:
         lines = block.split('\n')
         for line in lines:
             if is_list_block:
-                children = line.split(' ', 1)
-                child_blocks.append(LeafNode("li", children[1]))
+                child_blocks.append(ParentNode("li", text_to_children(line[2:].strip())))
 
         if is_list_block:
             block = None
         elif block_type is BlockType.Code:
-            child_blocks.append(LeafNode('code', block.split('```')[1]))
+            child_blocks.append(ParentNode('code', text_to_children(block)))
             block = None
         elif block_type is not BlockType.Paragraph:
             block = block.split(' ', 1)[1]
 
         if len(child_blocks) == 0:
             child_blocks = None
-            nodes.append(LeafNode(tag, block, child_blocks))
+
+            nodes.append(ParentNode(tag, text_to_children(block)))
         else:
             nodes.append(ParentNode(tag, child_blocks))
 
     return ParentNode("div", nodes)
+
+
+def text_to_children(text: str | None) -> list[HTMLNode]:
+    if text is None:
+        return []
+
+    text_nodes: list[TextNode] = markdown_to_nodes(text)
+    children: list[HTMLNode] = []
+    for node in text_nodes:
+        children.append(text_node_to_html_node(node))
+
+    return children

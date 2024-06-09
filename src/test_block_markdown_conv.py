@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode
 from block_markdown_conv import (
     markdown_to_blocks,
     block_to_block_type,
@@ -23,9 +23,8 @@ This is the same paragraph on a new line
 
         expected = [
             "This is **bolded** paragraph",
-            "This is another paragraph with *italic* text and `code` here\n"
-            "This is the same paragraph on a new line",
-            "* This is a list\n" "* with items",
+            "This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line",
+            "* This is a list\n* with items",
         ]
 
         self.assertListEqual(
@@ -38,8 +37,7 @@ This is the same paragraph on a new line
             ("- This is a list item", BlockType.UnorderedList),
             ("1. This is an ordered list item", BlockType.OrderedList),
             (
-                "1. This is an ordered list item\n"
-                "2. And this is the seoncd line for the list item",
+                "1. This is an ordered list item\n2. And this is the seoncd line for the list item",
                 BlockType.OrderedList,
             ),
             (
@@ -70,10 +68,10 @@ This is the same paragraph on a new line
             )
 
     def test_markdown_to_html_node(self):
-        test_cases = [
+        test_cases: list[tuple[str, list[HTMLNode]]] = [
             (
-                "* This is a list item",
-                [HTMLNode("ul", None, [HTMLNode("li", "This is a list item")])],
+                "*This is an italic item*",
+                [HTMLNode("p", None, [HTMLNode("em", "This is an italic item")])],
             ),
             (
                 "* This is a list item\n* This is another list item",
@@ -82,8 +80,8 @@ This is the same paragraph on a new line
                         "ul",
                         None,
                         [
-                            HTMLNode("li", "This is a list item"),
-                            HTMLNode("li", "This is another list item"),
+                            HTMLNode("li", None, [LeafNode(None, "This is a list item")]),
+                            HTMLNode("li", None, [LeafNode(None, "This is another list item")]),
                         ],
                     )
                 ],
@@ -95,8 +93,8 @@ This is the same paragraph on a new line
                         "ol",
                         None,
                         [
-                            HTMLNode("li", "This is a list item"),
-                            HTMLNode("li", "This is another list item"),
+                            HTMLNode("li", None, [LeafNode(None, "This is a list item")]),
+                            HTMLNode("li", None, [LeafNode(None, "This is another list item")]),
                         ],
                     )
                 ],
@@ -106,7 +104,8 @@ This is the same paragraph on a new line
                 [
                     HTMLNode(
                         "h2",
-                        "This is a header item",
+                        None,
+                        [LeafNode(None, "This is a header item")],
                     )
                 ],
             ),
@@ -115,13 +114,14 @@ This is the same paragraph on a new line
                 [
                     HTMLNode(
                         "p",
-                        "This is a paragraph item",
+                        None,
+                        [LeafNode(None, "This is a paragraph item")],
                     )
                 ],
             ),
             (
                 "```This is a code item```",
-                [HTMLNode("pre", None, [HTMLNode("code", "This is a code item")])],
+                [HTMLNode("pre", None, [HTMLNode("code", None, [LeafNode("code", "This is a code item")])])],
             ),
             (
                 """# Header 1
@@ -138,34 +138,35 @@ This is a paragraph.
 
 > BlockQuote""",
                 [
-                    HTMLNode("h1", "Header 1"),
-                    HTMLNode("h2", "Header 2"),
-                    HTMLNode("p", "This is a paragraph."),
+                    HTMLNode("h1", None, [LeafNode(None, "Header 1")]),
+                    HTMLNode("h2", None, [LeafNode(None, "Header 2")]),
+                    HTMLNode("p", None, [LeafNode(None, "This is a paragraph.")]),
                     HTMLNode(
                         "ol",
                         None,
                         [
-                            HTMLNode("li", "Ordered list item 1"),
-                            HTMLNode("li", "Ordered list item 2"),
+                            HTMLNode("li", None, [LeafNode(None, "Ordered list item 1")]),
+                            HTMLNode("li", None, [LeafNode(None, "Ordered list item 2")]),
                         ],
                     ),
                     HTMLNode(
                         "ul",
                         None,
                         [
-                            HTMLNode("li", "Unordered list item 1"),
-                            HTMLNode("li", "Unordered list item 2"),
+                            HTMLNode("li", None, [LeafNode(None, "Unordered list item 1")]),
+                            HTMLNode("li", None, [LeafNode(None, "Unordered list item 2")]),
                         ],
                     ),
                     HTMLNode(
                         "blockquote",
-                        "BlockQuote",
+                        None,
+                        [LeafNode(None, "BlockQuote")],
                     ),
                 ],
             ),
         ]
 
-        def assert_values(result, expected):
+        def assert_values(result: HTMLNode, expected: HTMLNode):
             self.assertTrue(
                 result.tag == expected.tag,
                 f"Tag is wrong\n\nExpected: {
@@ -177,12 +178,16 @@ This is a paragraph.
                     expected.value}\nActual: {result.value}",
             )
 
-            if result.children is not None:
+            if result.children is not None and expected.children is not None:
                 for i in range(len(result.children)):
                     assert_values(result.children[i], expected.children[i])
 
         for test_case in test_cases:
-            result: list[HTMLNode] = markdown_to_html_node(
+            result: list[HTMLNode] | None = markdown_to_html_node(
                 test_case[0]).children
+
+            if not result:
+                raise Exception("Children should not be None")
+
             for i in range(len(result)):
                 assert_values(result[i], test_case[1][i])

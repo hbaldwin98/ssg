@@ -53,6 +53,8 @@ def extract_title(markdown: str) -> str:
 
 def generate_page(from_path: str, template_path: str, dest_path: str):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    clear_existing(dest_path)
+
     markdown = ""
     template = ""
     with open(from_path) as md_file:
@@ -71,8 +73,36 @@ def generate_page(from_path: str, template_path: str, dest_path: str):
         _ = dest_file.write(template)
 
 
+def generate_page_recursive(from_path_content: str, template_path: str, dest_dir_path: str):
+    print(f"Generating page from {from_path_content} to {dest_dir_path} using {template_path}")
+    clear_existing(dest_dir_path)
+
+    template = ""
+    with open(template_path) as tp_file:
+        template = tp_file.read()
+
+    files = search_directory(from_path_content)
+
+    for file in files:
+        if os.path.isfile(file) and file.endswith(".md"):
+            markdown = ""
+
+            with open(file) as md_file:
+                markdown = md_file.read()
+
+            title = extract_title(markdown)
+            markdown_nodes = markdown_to_html_node(markdown)
+            html = template.replace("{{ Title }}", title, 1).replace(
+                "{{ Content }}", markdown_nodes.to_html(), 1)
+            new_file_path = file.replace(from_path_content, dest_dir_path, 1)
+            destination_file_path = "/".join([new_file_path.replace(".md", ".html")])
+            os.makedirs(os.path.dirname(destination_file_path))
+            with open(destination_file_path, "x") as dest_file:
+                _ = dest_file.write(html)
+
+
 def main():
-    generate_page("content/index.md", "template.html", "public")
+    generate_page_recursive("content", "template.html", "public")
 
 
 def create_public_dir():
