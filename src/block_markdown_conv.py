@@ -1,5 +1,5 @@
 from enum import Enum
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, ParentNode, LeafNode
 
 
 class BlockType(Enum):
@@ -100,19 +100,20 @@ def markdown_to_html_node(markdown: str) -> HTMLNode:
         for line in lines:
             if is_list_block:
                 children = line.split(' ', 1)
-                child_blocks.append(HTMLNode("li", children[1]))
+                child_blocks.append(LeafNode("li", children[1]))
 
         if is_list_block:
             block = None
         elif block_type is BlockType.Code:
-            child_blocks.append(HTMLNode('code', block.split('```')[1]))
+            child_blocks.append(LeafNode('code', block.split('```')[1]))
             block = None
         elif block_type is not BlockType.Paragraph:
             block = block.split(' ', 1)[1]
 
         if len(child_blocks) == 0:
             child_blocks = None
+            nodes.append(LeafNode(tag, block, child_blocks))
+        else:
+            nodes.append(ParentNode(tag, child_blocks))
 
-        nodes.append(HTMLNode(tag, block, child_blocks))
-
-    return HTMLNode('div', None, nodes)
+    return ParentNode("div", nodes)
